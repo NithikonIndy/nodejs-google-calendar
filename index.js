@@ -8,6 +8,7 @@ const { google } = require('googleapis');
 // Initialize Express app
 const app = express();
 
+
 // Set up Google OAuth2 client with credentials from environment variables
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -20,7 +21,7 @@ app.get('/', (req, res) => {
   // Generate the Google authentication URL
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline', // Request offline access to receive a refresh token
-    scope: 'https://www.googleapis.com/auth/calendar.readonly' // Scope for read-only access to the calendar
+    scope: 'https://www.googleapis.com/auth/calendar' // Scope for read-only access to the calendar
   });
   // Redirect the user to Google's OAuth 2.0 server
   res.redirect(url);
@@ -30,6 +31,7 @@ app.get('/', (req, res) => {
 app.get('/redirect', (req, res) => {
   // Extract the code from the query parameter
   const code = req.query.code;
+
   // Exchange the code for tokens
   oauth2Client.getToken(code, (err, tokens) => {
     if (err) {
@@ -38,8 +40,12 @@ app.get('/redirect', (req, res) => {
       res.send('Error');
       return;
     }
+
+
     // Set the credentials for the Google API client
-    oauth2Client.setCredentials(tokens);
+    oauth2Client.setCredentials(
+      tokens
+    );
     // Notify the user of a successful login
     res.send('Successfully logged in');
   });
@@ -47,6 +53,7 @@ app.get('/redirect', (req, res) => {
 
 // Route to list all calendars
 app.get('/calendars', (req, res) => {
+  console.log(oauth2Client);
   // Create a Google Calendar API client
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
   // List all calendars
@@ -61,6 +68,7 @@ app.get('/calendars', (req, res) => {
     const calendars = response.data.items;
     res.json(calendars);
   });
+
 });
 
 // Route to list events from a specified calendar
@@ -88,6 +96,46 @@ app.get('/events', (req, res) => {
     res.json(events);
   });
 });
+
+
+app.get("/createEvent", (req, res) => {
+  const GOOGLE_CALENDAR_ID="nithikon1404@gmail.com"
+  var event = {
+    'summary': 'My first event!',
+    'location': 'Hyderabad,India',
+    'description': 'First event with nodeJS!',
+    'start': {
+      'dateTime': '2024-06-1T09:00:00-07:00',
+      'timeZone': 'Asia/Dhaka',
+    },
+    'end': {
+      'dateTime': '2024-06-1T17:00:00-07:00',
+      'timeZone': 'Asia/Dhaka',
+    },
+    'attendees': [],
+    'reminders': {
+      'useDefault': false,
+      'overrides': [
+        { 'method': 'email', 'minutes': 24 * 60 },
+        { 'method': 'popup', 'minutes': 10 },
+      ],
+    },
+  };
+
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  calendar.events.insert({
+    calendarId: GOOGLE_CALENDAR_ID,
+    resource: event,
+  }, function (err, event) {
+    if (err) {
+      console.log('There was an error contacting the Calendar service: ' + err);
+      return;
+    }
+    console.log('Event created: %s', event.data);
+    res.json("Event successfully created!");
+  });
+})
+
 
 // Start the Express server
 app.listen(3000, () => console.log('Server running at 3000'));

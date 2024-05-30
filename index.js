@@ -122,6 +122,8 @@ app.get("/createEvent", (req, res) => {
     },
   };
 
+
+
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
   calendar.events.insert({
     calendarId: GOOGLE_CALENDAR_ID,
@@ -136,6 +138,22 @@ app.get("/createEvent", (req, res) => {
   });
 })
 
+app.get("/deleteEvent", (req, res) =>{
+  const GOOGLE_CALENDAR_ID="nithikon1404@gmail.com"
+  const GOOGLE_EVENT_ID="qcorej9g1q4opl6e5m9b7ak3ho"
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  calendar.events.delete({
+    calendarId: GOOGLE_CALENDAR_ID,
+    eventId: GOOGLE_EVENT_ID,
+  }, function (err, event) {
+    if (err) {
+      console.log('There was an error contacting the Calendar service: ' + err);
+      return;
+    }
+    console.log('Event delete: %s', event.data);
+    res.json("Event successfully delete!");
+  });
+})
 
 // Start the Express server
 app.listen(3000, () => console.log('Server running at 3000'));
